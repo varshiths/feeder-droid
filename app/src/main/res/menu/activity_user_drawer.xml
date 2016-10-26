@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_calendar"
+            android:icon="@drawable/ic_menu_calendar"
+            android:title="@string/nav_str_calendar" />
+        <item
+            android:id="@+id/nav_courses"
+            android:icon="@drawable/ic_menu_courses"
+            android:title="@string/nav_str_courses" />
+    </group>
+
+    <item android:title="Communicate">
+        <menu>
+            <item
+                android:id="@+id/nav_sync"
+                android:icon="@drawable/ic_menu_sync"
+                android:title="@string/nav_str_sync" />
+        </menu>
+    </item>
+
+</menu>

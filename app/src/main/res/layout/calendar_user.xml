@@ -13,4 +13,11 @@
     tools:context="com.ssl.mavericks.feeder39.UserActivity"
     tools:showIn="@layout/app_bar_user">
 
+    <CalendarView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/calendar"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
 </RelativeLayout>

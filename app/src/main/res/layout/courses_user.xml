@@ -13,4 +13,12 @@
     tools:context="com.ssl.mavericks.feeder39.UserActivity"
     tools:showIn="@layout/app_bar_user">
 
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/courses_list"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="61dp" />
 </RelativeLayout>

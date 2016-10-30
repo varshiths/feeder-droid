@@ -3,6 +3,7 @@
     <item name="ic_menu_calendar" type="drawable">@android:drawable/ic_menu_my_calendar</item>
     <item name="ic_menu_courses" type="drawable">@android:drawable/ic_menu_info_details</item>
     <item name="ic_menu_sync" type="drawable">@android:drawable/ic_menu_upload</item>
+    <item name="ic_menu_logout" type="drawable">@android:drawable/ic_menu_revert</item>
     <item name="ic_menu_gallery" type="drawable">@android:drawable/ic_menu_gallery</item>
     <item name="ic_menu_slideshow" type="drawable">@android:drawable/ic_menu_slideshow</item>
     <item name="ic_menu_manage" type="drawable">@android:drawable/ic_menu_manage</item>

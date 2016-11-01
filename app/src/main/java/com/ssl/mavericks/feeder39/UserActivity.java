@@ -1,9 +1,11 @@
 package com.ssl.mavericks.feeder39;
 
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -39,10 +41,21 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.CookieStore;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 public class UserActivity extends AppCompatActivity
@@ -56,6 +69,7 @@ public class UserActivity extends AppCompatActivity
     CaldroidCustom caldroidFragment;
     CaldroidListener caldroidListener;
     UserSessionManager session;
+//    public final static CookieManager cookies = new CookieManager();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -211,7 +225,8 @@ public class UserActivity extends AppCompatActivity
         } else if (id == R.id.nav_sync) {
             syncData();
         } else if (id == R.id.nav_logout) {
-            session.logoutUser();
+            UserLogoutTask logout = new UserLogoutTask();
+            logout.execute();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -252,7 +267,7 @@ public class UserActivity extends AppCompatActivity
             }
         });
 
-        q.add(s);
+//        q.add(s);
 
         adapter.notifyDataSetChanged();
 
@@ -260,5 +275,78 @@ public class UserActivity extends AppCompatActivity
 
     public void openCourseActivity(int index) {
         Toast.makeText(getApplicationContext(), "" + index, Toast.LENGTH_SHORT).show();
+    }
+
+    public class UserLogoutTask extends AsyncTask<Void, Void, Boolean> {
+
+        UserLogoutTask() {}
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+
+            URL url = null;
+            try {
+                url = new URL("http://192.168.0.121:8000/loginstuff/androidlogin/");
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+
+            JSONObject jsonObject = null;
+            HttpURLConnection client = null;
+            try {
+                client = (HttpURLConnection) url.openConnection();
+
+                client.setRequestProperty("Cookie", session.getUserDetails().get(UserSessionManager.SESSION_COOKIE));
+                client.setRequestMethod("GET");
+                client.setConnectTimeout(5000);
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
+
+                StringBuilder stringBuilder = new StringBuilder();
+                String line = null;
+                // Read Server Response
+                while((line = reader.readLine()) != null)
+                {
+                    // Append server response in string
+                    stringBuilder.append(line + "\n");
+                }
+
+//                cookie = client.getHeaderFields().get("Set-Cookie").get(0);
+
+                for (Map.Entry<String, List<String>> entry : client.getHeaderFields().entrySet()) {
+                    System.out.println(entry.getKey()
+                            + ":" + entry.getValue());
+                }
+//                System.out.println("Raw Message: " + stringBuilder.toString());
+//                System.out.println("Set-Cookie:" + cookie);
+
+                reader.close();
+                jsonObject = new JSONObject(stringBuilder.toString());
+
+                return jsonObject.get("Success") == "true";
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (NullPointerException e) {
+                e.printStackTrace();
+            } finally {
+                client.disconnect();
+//                return false;
+                return true;
+            }
+
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+
+            if (success) {
+                session.logoutUser();
+                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                startActivity(intent);
+            } else {
+                Toast.makeText(getApplicationContext(), R.string.login_fail_string, Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

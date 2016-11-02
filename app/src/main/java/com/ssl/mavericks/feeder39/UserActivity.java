@@ -87,7 +87,7 @@ public class UserActivity extends AppCompatActivity
 
         setListeners();
 
-        populateApp();
+//        populateApp();
         vf.setDisplayedChild(1);
     }
 
@@ -243,33 +243,58 @@ public class UserActivity extends AppCompatActivity
 //
     public void populateApp(){
 
-        RequestQueue q = Volley.newRequestQueue(this);
+        URL url = null;
+        try {
+            url = new URL("http://192.168.0.121:8000/loginstuff/login/");
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
 
-        StringRequest s = new StringRequest(Request.Method.GET, "http://192.168.0.121:8000/coreapp", new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-//                JSONObject j = null;
-//                try {
-//                    j = new JSONObject(response);
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//                try {
-//                    listItems.add(j.getString("foo"));
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
+        JSONObject jsonObject = null;
+        HttpURLConnection client = null;
+        try {
+            client = (HttpURLConnection) url.openConnection();
+
+            client.setRequestProperty("Cookie", session.getUserDetails().get(UserSessionManager.SESSION_COOKIE));
+            client.setRequestMethod("GET");
+            client.setConnectTimeout(5000);
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
+
+            StringBuilder stringBuilder = new StringBuilder();
+            String line = null;
+            // Read Server Response
+            while((line = reader.readLine()) != null)
+            {
+                // Append server response in string
+                stringBuilder.append(line + "\n");
             }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
 
+//                cookie = client.getHeaderFields().get("Set-Cookie").get(0);
+
+            for (Map.Entry<String, List<String>> entry : client.getHeaderFields().entrySet()) {
+                System.out.println(entry.getKey()
+                        + ":" + entry.getValue());
             }
-        });
+                System.out.println("Raw Message: " + stringBuilder.toString());
+//                System.out.println("Set-Cookie:" + cookie);
 
-//        q.add(s);
+            reader.close();
+            jsonObject = new JSONObject(stringBuilder.toString());
 
-        adapter.notifyDataSetChanged();
+//            return jsonObject.get("Success") == "true";
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } finally {
+            client.disconnect();
+//            return false;
+//                return true;
+        }
 
     }
 
@@ -286,7 +311,7 @@ public class UserActivity extends AppCompatActivity
 
             URL url = null;
             try {
-                url = new URL("http://192.168.0.121:8000/loginstuff/androidlogin/");
+                url = new URL(LoginActivity.LOGIN_URL);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
@@ -313,17 +338,19 @@ public class UserActivity extends AppCompatActivity
 
 //                cookie = client.getHeaderFields().get("Set-Cookie").get(0);
 
-                for (Map.Entry<String, List<String>> entry : client.getHeaderFields().entrySet()) {
-                    System.out.println(entry.getKey()
-                            + ":" + entry.getValue());
-                }
-//                System.out.println("Raw Message: " + stringBuilder.toString());
+//                for (Map.Entry<String, List<String>> entry : client.getHeaderFields().entrySet()) {
+//                    System.out.println(entry.getKey()
+//                            + ":" + entry.getValue());
+//                }
 //                System.out.println("Set-Cookie:" + cookie);
 
                 reader.close();
-                jsonObject = new JSONObject(stringBuilder.toString());
+//                jsonObject = new JSONObject(stringBuilder.toString());
+//                System.out.println(jsonObject);
 
-                return jsonObject.get("Success") == "true";
+//                System.out.println("Raw Message: " + stringBuilder.toString());
+
+                return true;
 
             } catch (IOException e) {
                 e.printStackTrace();

@@ -26,10 +26,14 @@ import org.json.JSONObject;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.net.CookieManager;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
@@ -40,6 +44,7 @@ import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
 
+    public static final String LOGIN_URL = "http://localhost:8039/loginstuff/androidlogin/";
     UserSessionManager session;
 
     @Override
@@ -99,6 +104,7 @@ public class LoginActivity extends AppCompatActivity {
         private final String mPassword;
         Context mContext;
         String cookie;
+        String login_message;
 
         UserLoginTask(String username, String password, Context context) {
             mUserName = username;
@@ -109,9 +115,11 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(Void... params) {
 
+            Boolean s = null;
+
             URL url = null;
             try {
-                url = new URL("http://192.168.0.121:8000/loginstuff/androidlogin/");
+                url = new URL(LOGIN_URL);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
@@ -121,7 +129,53 @@ public class LoginActivity extends AppCompatActivity {
             try {
                 client = (HttpURLConnection) url.openConnection();
 
+                client.setRequestMethod("GET");
+                client.setConnectTimeout(5000);
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
+
+                StringBuilder stringBuilder = new StringBuilder();
+                String line = null;
+                // Read Server Response
+                while((line = reader.readLine()) != null)
+                {
+                    // Append server response in string
+                    stringBuilder.append(line + "\n");
+                }
+
+                cookie = client.getHeaderFields().get("Set-Cookie").get(0);
+                for (Map.Entry<String, List<String>> entry : client.getHeaderFields().entrySet()) {
+                    System.out.println(entry.getKey()
+                            + ":" + entry.getValue());
+                }
+                System.out.println("Set-Cookie:" + cookie);
+
+                reader.close();
+                jsonObject = new JSONObject(stringBuilder.toString());
+
+                System.out.println("Raw Message: " + stringBuilder.toString());
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (NullPointerException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            } finally {
+                client.disconnect();
+            }
+
+//            System.out.println(token);
+
+            HashMap<String,String> jsonResp = null;
+            try {
+                String token = cookie.substring(cookie.indexOf("=")+1,cookie.indexOf(";"));
+                client = (HttpURLConnection) url.openConnection();
+
                 client.setRequestMethod("POST");
+                client.setRequestProperty("Referer",LOGIN_URL);
+                client.setRequestProperty("X-CSRFToken",token);
+                client.setRequestProperty("Cookie", "csrftoken="+token);
                 client.setConnectTimeout(5000);
                 client.setDoOutput(true);
 
@@ -138,15 +192,28 @@ public class LoginActivity extends AppCompatActivity {
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
+//                InputStream ois = client.getInputStream();
+//
+//                ObjectInputStream o = new ObjectInputStream(ois);
+//                final Object obj = o.readObject();
+//
+//                ois.close();
+//
+//                jsonObject = (JSONObject) obj;
+
+
                 StringBuilder stringBuilder = new StringBuilder();
-                jsonObject = new JSONObject(stringBuilder.toString());
+//                jsonObject = new JSONObject(stringBuilder.toString());
+                System.out.println(stringBuilder.toString());
                 String line = null;
-                // Read Server Response
+//                String
+//                 Read Server Response
                 while((line = reader.readLine()) != null)
                 {
-                    // Append server response in string
+//                     Append server response in string
                     stringBuilder.append(line + "\n");
                 }
+//
 
                 cookie = client.getHeaderFields().get("Set-Cookie").get(0);
 //
@@ -156,21 +223,29 @@ public class LoginActivity extends AppCompatActivity {
                 }
 //                System.out.println("Set-Cookie:" + cookie);
 
-                reader.close();
+//                reader.close();
                 outputPost.close();
 
-                client.disconnect();
-                return jsonObject.get("Success") == "true";
+                login_message = stringBuilder.toString();
+//                System.out.println(stringBuilder.toString());
+//                System.out.println(jsonObject);
+
+//                System.out.println("Here");
+//                client.disconnect();
+                s = stringBuilder.toString().contains("Welcome");
+                return true;
+//                jsonResp = new HashMap<String, String>((Map<? extends String, ? extends String>) jsonObject);
+
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (NullPointerException e) {
                 e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
             } finally {
                 client.disconnect();
-//                return false;
-                return true;
+                if(s==null)
+                    return false;
+
+                return s;
             }
         }
 
@@ -178,6 +253,7 @@ public class LoginActivity extends AppCompatActivity {
         protected void onPostExecute(final Boolean success) {
 
             if (success) {
+                Toast.makeText(getApplicationContext(), login_message, Toast.LENGTH_LONG).show();
                 session.createUserLoginSession(mUserName,mPassword,cookie,mContext);
                 Intent intent = new Intent(getApplicationContext(), UserActivity.class);
                 startActivity(intent);

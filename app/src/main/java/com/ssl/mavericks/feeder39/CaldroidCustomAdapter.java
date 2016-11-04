@@ -23,6 +23,7 @@ public class CaldroidCustomAdapter extends CaldroidGridAdapter {
                                        Map<String, Object> caldroidData,
                                        Map<String, Object> extraData) {
         super(context, month, year, caldroidData, extraData);
+
     }
 
     @Override
@@ -43,7 +44,6 @@ public class CaldroidCustomAdapter extends CaldroidGridAdapter {
 
         TextView dateDay = (TextView) cellView.findViewById(R.id.number);
         TextView eventsDay = (TextView) cellView.findViewById(R.id.events_day);
-//        TextView tv2 = (TextView) cellView.findViewById(R.id.tv2);
 
         dateDay.setTextColor(Color.BLACK);
 
@@ -99,13 +99,17 @@ public class CaldroidCustomAdapter extends CaldroidGridAdapter {
                 cellView.setBackgroundResource(com.caldroid.R.drawable.cell_bg);
             }
         }
-        eventsDay.setTextSize(10f);
+        eventsDay.setTextSize(8f); // dont touch
+        dateDay.setTextSize(13f);  // dont touch
         eventsDay.setText("");
 
         if(dateTime.equals(getToday())){
             dateDay.setVisibility(View.GONE);
             cellView.setBackgroundResource(com.caldroid.R.drawable.disabled_cell_dark);
-            eventsDay.setText("Hello\nThis\nThat\nWhich\nWhy");
+
+            eventsDay.setText("Helszcc\nTscscahis\nacascxac\nsca");
+
+            eventsDay.setHorizontallyScrolling(true);
             eventsDay.setTextColor(Color.WHITE);
         }else {
             dateDay.setText("" + dateTime.getDay());

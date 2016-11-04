@@ -13,7 +13,8 @@
     tools:context="com.ssl.mavericks.feeder39.UserActivity"
     tools:showIn="@layout/app_bar_user">
 
-    <CalendarView
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="51dp"

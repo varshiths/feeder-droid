@@ -36,19 +36,19 @@ public class UserSessionManager {
     int PRIVATE_MODE = 0;
 
     // Sharedpref file name
-    private static final String PREFER_NAME = "AndroidExamplePref";
+    private static final String PREFER_NAME = "com.ssl.mavericks.feeder39.SHARED_PREFERENCES";
 
     // All Shared Preferences Keys
-    private static final String IS_USER_LOGIN = "IsUserLoggedIn";
+    private static final String IS_USER_LOGIN = "com.ssl.mavericks.feeder39.LOGIN_STATUS";
 
     // User name (make variable public to access from outside)
-    public static final String KEY_NAME = "name";
-
-    // Email address (make variable public to access from outside)
-    public static final String KEY_EMAIL = "email";
+    public static final String KEY_NAME = "com.ssl.mavericks.feeder39.KEY_NAME";
 
     // session cookie stored as string
-    public static final String SESSION_COOKIE = "SessionCookie";
+    public static final String SESSION_COOKIE = "com.ssl.mavericks.feeder39.SESSION_COOKIE";
+
+    // database stored in file
+    public static final String FILE_DATABASE = "com.ssl.mavericks.feeder39.FILE_DATABASE";
 
     // Constructor
     public UserSessionManager(Context context){
@@ -59,45 +59,6 @@ public class UserSessionManager {
 
     //Create login session
     public boolean createUserLoginSession(String username, String password, String cookie, Context context){
-
-//        RequestQueue q = Volley.newRequestQueue(context);
-//
-//        HashMap<String, String> params = new HashMap<String, String>();
-//        params.put("username", username);
-//        params.put("password", password);
-
-//        final Boolean[] success = new Boolean[1];
-//
-//        JsonObjectRequest req = new JsonObjectRequest("http://requestb.in/u52xd0u5", new JSONObject(params), new Response.Listener<JSONObject>() {
-//            @Override
-//            public void onResponse(JSONObject response) {
-//                try {
-//                    success[0] = Integer.parseInt(response.get("Success").toString()) == 1;
-//
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }, new Response.ErrorListener() {
-//            @Override
-//            public void onErrorResponse(VolleyError error) {
-//
-//            }
-//        }){
-//            @Override
-//            public Map<String, String> getHeaders() throws AuthFailureError {
-//                return super.getHeaders();
-//            }
-//
-//            @Override
-//            protected Response<JSONObject> parseNetworkResponse(NetworkResponse response) {
-//                Map<String,String> header = response.headers;
-//                sessionCookie[0] = header.get("Set-Cookie");
-//                return super.parseNetworkResponse(response);
-//            }
-//        };
-//
-//        q.add(req);
 
         // Storing login value as TRUE
         editor.putBoolean(IS_USER_LOGIN, true);
@@ -152,9 +113,6 @@ public class UserSessionManager {
 
         // user name
         user.put(KEY_NAME, pref.getString(KEY_NAME, null));
-
-        // user email id
-        user.put(KEY_EMAIL, pref.getString(KEY_EMAIL, null));
 
         // user email id
         user.put(SESSION_COOKIE, pref.getString(SESSION_COOKIE, null));

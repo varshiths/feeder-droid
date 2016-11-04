@@ -46,12 +46,4 @@
         android:layout_marginTop="13dp"
         android:id="@+id/lButton" />
 
-    <TextView
-        android:text="Register Here"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/lButton"
-        android:layout_centerHorizontal="true"
-        android:id="@+id/lRegister" />
-
 </RelativeLayout>

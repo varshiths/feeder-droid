@@ -22,10 +22,6 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".SyncService"
-            android:exported="false" />
-
         <activity android:name=".EventActivity" />
         <activity android:name=".FeedbackActivity"></activity>
     </application>

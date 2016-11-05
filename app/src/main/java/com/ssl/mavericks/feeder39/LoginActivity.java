@@ -48,7 +48,7 @@ import java.util.Map;
 public class LoginActivity extends AppCompatActivity {
 
 //    public static final String HOST_URL = "http://localhost:8039/";
-    public static final String HOST_URL = "http://172.16.42.6:8000/";
+    public static final String HOST_URL = "http://10.0.1.10:8000/";
     public static final String LOGIN_URL = HOST_URL + "android/androidlog/";
     UserSessionManager session;
 
@@ -119,17 +119,16 @@ public class LoginActivity extends AppCompatActivity {
             data.put("password",mPassword);
             String dataStr = (new JSONObject(data)).toString();
 
-            ArrayList<String> response = call.postRequest(LOGIN_URL, token, dataStr, NetReq.RESET_COOKIE);
+            ArrayList<String> response = call.postRequest(LOGIN_URL, token, dataStr);
             cookie = response.get(0);
 
             JSONObject jsonObject = null;
 
-            if (response == null) return true;
+            if (response == null) return false;
             try {
                 jsonObject = new JSONObject(response.get(1));
-                finalStatus = jsonObject.get("Success") == "true";
-//                finalStatus = response.contains("true");
-                return true;
+                finalStatus = response.get(1).contains("true");
+                return finalStatus;
             } catch (JSONException e) {
                 e.printStackTrace();
             } catch (IndexOutOfBoundsException e){
@@ -137,7 +136,6 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             return finalStatus;
-//            return true;
 
         }
 
@@ -145,7 +143,7 @@ public class LoginActivity extends AppCompatActivity {
         protected void onPostExecute(final Boolean success) {
 
             if (success) {
-                session.createUserLoginSession(mUserName,mPassword,cookie,mContext);
+                session.createUserLoginSession(mUserName,mPassword,cookie,mContext,token);
                 Intent intent = new Intent(getApplicationContext(), UserActivity.class);
                 startActivity(intent);
             } else {

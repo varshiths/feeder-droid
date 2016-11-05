@@ -1,5 +1,7 @@
 package com.ssl.mavericks.feeder39;
 
+import android.support.annotation.Nullable;
+
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -39,11 +41,13 @@ public class NetReq {
 
             String tSetCookie = client.getHeaderFields().get("Set-Cookie").get(0);
             token = tSetCookie.substring(tSetCookie.indexOf("=")+1,tSetCookie.indexOf(";"));
+            System.out.println(tSetCookie);
+            System.out.println(token);
 
-//            for (Map.Entry<String, List<String>> entry : client.getHeaderFields().entrySet()) {
-//                System.out.println(entry.getKey()
-//                        + ":" + entry.getValue());
-//            }
+            for (Map.Entry<String, List<String>> entry : client.getHeaderFields().entrySet()) {
+                System.out.println(entry.getKey()
+                        + ":" + entry.getValue());
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -56,7 +60,7 @@ public class NetReq {
         return token;
     }
 
-    public ArrayList<String> postRequest(String iurl, String token, String dataStr, boolean cookieReset){
+    public ArrayList<String> postRequest(String iurl, String token, String dataStr){
 
         StringBuilder stringBuilder = null;
         ArrayList<String> retVal = new ArrayList<String>();
@@ -72,6 +76,9 @@ public class NetReq {
             client.setConnectTimeout(CONNECTON_TIMEOUT);
             client.setDoOutput(true);
 
+            System.out.println("Request Header");
+            System.out.println(client.getRequestProperties());
+
             OutputStreamWriter outputPost = new OutputStreamWriter(client.getOutputStream());
 
             outputPost.write(dataStr);
@@ -84,8 +91,7 @@ public class NetReq {
 
             while((line = reader.readLine()) != null){stringBuilder.append(line + "\n");}
 
-            if(cookieReset)
-                cookie = client.getHeaderFields().get("Set-Cookie").get(0);
+            cookie = client.getHeaderFields().get("Set-Cookie").get(0);
 
             System.out.print("Saved Cookie: ");
             System.out.println(cookie);

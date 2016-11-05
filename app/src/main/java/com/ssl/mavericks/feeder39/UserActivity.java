@@ -46,6 +46,7 @@ public class UserActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     public static final String FEEDBACK_URL = LoginActivity.HOST_URL + "android/feedbacklist/";
+    public static final String QUESTIONS_URL = LoginActivity.HOST_URL + "android/questionlist/";
     public static final String ASSIGNMENTS_URL = LoginActivity.HOST_URL + "android/assignmentlist/";
     public static final String COURSES_URL = LoginActivity.HOST_URL + "android/courselist/";
 
@@ -57,14 +58,19 @@ public class UserActivity extends AppCompatActivity
     ArrayAdapter<String> eventListAdapter;
     ArrayList<String> eventListItems = new ArrayList<String>();
 
-    ArrayList<Course> coursesInDatabase;
-    HashMap<String, Integer> assignmentCodesInDatabase;
-    HashMap<Date, ArrayList<Assignment>> assignmentsDateLists;
+    public static HashMap<String, Course> coursesInDatabase;
+    public static HashMap<Integer, String> coursesCodesInDatabase;
+    public static HashMap<String, Assignment> assignmentsInDatabase;
+    public static HashMap<Date, ArrayList<Assignment>> assignmentsDateLists;
+    public static HashMap<String, Feedback> feedbacksInDatabase;
+    public static HashMap<Date, ArrayList<Feedback>> feedbacksDateLists;
+
+    NetReq netReq = new NetReq();
 
     CaldroidListener caldroidListener;
     CaldroidCustom caldroidFragment;
 
-    UserSessionManager session;
+    public static UserSessionManager session;
     ViewFlipper vf;
 
     @Override
@@ -83,7 +89,6 @@ public class UserActivity extends AppCompatActivity
         setListeners();
 
         syncData();
-
         vf.setDisplayedChild(1);
     }
 
@@ -133,6 +138,7 @@ public class UserActivity extends AppCompatActivity
                 agendaHead.setVisibility(View.VISIBLE);
                 eventListView.setVisibility(View.VISIBLE);
                 eventListItems.clear();
+                agendaHead.setText("Agenda for " + formatter.format(date));
 
                 try {
                     ArrayList<Assignment> list = assignmentsDateLists.get(date);
@@ -141,13 +147,22 @@ public class UserActivity extends AppCompatActivity
                             eventListItems.add(a.getTitle());
                         }
                     }
-                    eventListAdapter.notifyDataSetChanged();
-
-                    agendaHead.setText("Agenda for " + formatter.format(date));
                 }catch (NullPointerException e){
                     e.printStackTrace();
                 }
 
+                try {
+                    ArrayList<Feedback> list = feedbacksDateLists.get(date);
+                    if(list != null) {
+                        for (Feedback f : list) {
+                            eventListItems.add(f.getFeedbackName());
+                        }
+                    }
+                } catch (NullPointerException e){
+                    e.printStackTrace();
+                }
+
+                eventListAdapter.notifyDataSetChanged();
 
             }
 
@@ -161,7 +176,7 @@ public class UserActivity extends AppCompatActivity
             @Override
             public void onItemClick(AdapterView<?> arg0, View arg1,int position, long arg3)
             {
-                Toast.makeText(getApplicationContext(), coursesInDatabase.get(position).getDatabaseCode() + "", Toast.LENGTH_SHORT);
+//                Toast.makeText(getApplicationContext(), coursesInDatabase.get(position).getDatabaseCode() + "", Toast.LENGTH_SHORT);
             }
         });
 
@@ -170,6 +185,35 @@ public class UserActivity extends AppCompatActivity
         eventListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                try {
+                    Assignment a = assignmentsInDatabase.get(eventListItems.get(i));
+                    SimpleDateFormat formatter = new SimpleDateFormat("E, MMM dd");
+
+                    Intent intent = new Intent(getApplicationContext(),EventActivity.class);
+                    intent.putExtra(EventActivity.EVENT_TITLE,a.getTitle());
+                    intent.putExtra(EventActivity.EVENT_DESCRIPTION,a.getDescription());
+                    intent.putExtra(EventActivity.EVENT_DEADLINE,formatter.format(a.getDeadline()));
+                    intent.putExtra(EventActivity.EVENT_SOURCE,coursesInDatabase.get(coursesCodesInDatabase.get(a.getCourseDatabaseCode())).getCode());
+                    startActivity(intent);
+                }catch (NullPointerException e){
+                    e.printStackTrace();
+                } finally {
+                    try {
+                        Feedback a = feedbacksInDatabase.get(eventListItems.get(i));
+                        SimpleDateFormat formatter = new SimpleDateFormat("E, MMM dd");
+
+                        if(a.alreadyFilled){
+                            Toast.makeText(getApplicationContext(),"Already filled", Toast.LENGTH_SHORT);
+                        }
+                        else{
+                            Intent intent = new Intent(getApplicationContext(),FeedbackActivity.class);
+                            intent.putExtra(FeedbackActivity.FEEDBACK_NAME,a.getFeedbackName());
+                            startActivity(intent);
+                        }
+                    }catch (NullPointerException e){
+                        e.printStackTrace();
+                    }
+                }
 
             }
         });
@@ -225,7 +269,7 @@ public class UserActivity extends AppCompatActivity
 
     public void populateApp(){
         try{
-            for (Course course : coursesInDatabase ) {
+            for (Course course : coursesInDatabase.values() ) {
                 courseListItems.add(course.getCode() + " " + course.getName());
             }
             courseListAdapter.notifyDataSetChanged();
@@ -250,24 +294,64 @@ public class UserActivity extends AppCompatActivity
 
             try {
 
-                NetReq netReq = new NetReq();
                 String response;
-//                response = "a[{\"model\":\"assignments.assignmentstore\",\"pk\":4,\"fields\":{\"course_code\":1,\"deadline\":\"2016-11-23T19:00:00Z\",\"name\":\"First assignment added\"}},{\"model\":\"assignments.assignmentstore\",\"pk\":5,\"fields\":{\"course_code\":2,\"deadline\":\"2016-11-13T12:00:00Z\",\"name\":\"Submit assignment in 213 lab\"}},{\"model\":\"assignments.assignmentstore\",\"pk\":6,\"fields\":{\"course_code\":3,\"deadline\":\"2016-11-10T02:10:21Z\",\"name\":\"Assignment manageable\"}},{\"model\":\"assignments.assignmentstore\",\"pk\":7,\"fields\":{\"course_code\":4,\"deadline\":\"2016-11-06T00:00:00Z\",\"name\":\"Sleep.Code.Repeat.\"}},{\"model\":\"assignments.assignmentstore\",\"pk\":8,\"fields\":{\"course_code\":1,\"deadline\":\"2016-11-29T12:00:00Z\",\"name\":\"Project Submission\"}}]a";
-                response = netReq.dataRequest(ASSIGNMENTS_URL,session);
 
+                response = netReq.dataRequest(COURSES_URL,session);
+                response = response.replace("\\","");
+                response = response.substring(1,response.length()-1);
+                System.out.println(response);
+                JSONArray coursesJson = new JSONArray(response);
+                System.out.println(coursesJson);
+
+                coursesInDatabase = new HashMap<String, Course>();
+                coursesCodesInDatabase = new HashMap<Integer, String>();
+                for (int i = 0; i < coursesJson.length(); i++){
+                    JSONObject temp = (JSONObject) coursesJson.get(i);
+                    JSONObject fields = (JSONObject) temp.get("fields");
+                    coursesCodesInDatabase.put(temp.getInt("pk"),fields.getString("name"));
+                    coursesInDatabase.put(fields.getString("name"),new Course(temp.getInt("pk"), fields.getString("code"), fields.getString("name"))); // (fields.get("code").toString(),temp.getInt("pk"));
+                }
+
+
+                response = netReq.dataRequest(FEEDBACK_URL,session);
+                response = response.replace("\\","");
+                response = response.substring(1,response.length()-1);
+                JSONArray feedbackJson = new JSONArray(response);
+                System.out.println(feedbackJson);
+
+                feedbacksInDatabase = new HashMap<String, Feedback>();
+                feedbacksDateLists = new HashMap<Date, ArrayList<Feedback>>();
+                for (int i = 0; i < feedbackJson.length(); i++){
+                    JSONObject temp = (JSONObject) feedbackJson.get(i);
+                    JSONObject fields = (JSONObject) temp.get("fields");
+                    DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+                    feedbacksInDatabase.put(fields.get("feedback_name").toString(),new Feedback(temp.getInt("pk"), fields.getInt("coursecode"),
+                            fields.get("feedback_name").toString(), formatter.parse(fields.getString("deadline"))));
+
+                    String dateString = fields.getString("deadline").toString();
+                    dateString = dateString.substring(0,dateString.indexOf("Z")-8) + "00:00:00Z";
+                    Date day = formatter.parse(dateString);
+                    if(feedbacksDateLists.get(day) == null){
+                        feedbacksDateLists.put(day, new ArrayList<Feedback>());
+                    }
+                    feedbacksDateLists.get(day).add(new Feedback(temp.getInt("pk"), fields.getInt("coursecode"), fields.get("feedback_name").toString(), day));
+                }
+
+                response = netReq.dataRequest(ASSIGNMENTS_URL,session);
                 response = response.replace("\\","");
                 response = response.substring(1,response.length()-1);
                 JSONArray assignmentJson = new JSONArray(response);
                 System.out.println(assignmentJson);
 
-                assignmentCodesInDatabase = new HashMap<String, Integer>();
+                assignmentsInDatabase = new HashMap<String, Assignment>();
                 assignmentsDateLists = new HashMap<Date, ArrayList<Assignment>>();
                 for (int i = 0; i < assignmentJson.length(); i++){
                     JSONObject temp = (JSONObject) assignmentJson.get(i);
                     JSONObject fields = (JSONObject) temp.get("fields");
-                    assignmentCodesInDatabase.put(fields.get("name").toString(), temp.getInt("pk"));
-
                     DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+                    assignmentsInDatabase.put(fields.get("title").toString(),new Assignment(temp.getInt("pk"), fields.getInt("coursecode"),
+                            fields.get("title").toString(),fields.getString("description"), formatter.parse(fields.getString("deadline"))));
+
                     String dateString = fields.getString("deadline").toString();
                     dateString = dateString.substring(0,dateString.indexOf("Z")-8) + "00:00:00Z";
                     Date day = formatter.parse(dateString);
@@ -275,19 +359,6 @@ public class UserActivity extends AppCompatActivity
                         assignmentsDateLists.put(day, new ArrayList<Assignment>());
                     }
                     assignmentsDateLists.get(day).add(new Assignment(temp.getInt("pk"), fields.getInt("coursecode"), fields.get("title").toString(),fields.getString("description"), day));
-                }
-
-                response = netReq.dataRequest(COURSES_URL,session);
-                response = response.replace("\\","");
-                response = response.substring(1,response.length()-1);
-                JSONArray coursesJson = new JSONArray(response);
-                System.out.println(coursesJson);
-
-                coursesInDatabase = new ArrayList<Course>();
-                for (int i = 0; i < coursesJson.length(); i++){
-                    JSONObject temp = (JSONObject) coursesJson.get(i);
-                    JSONObject fields = (JSONObject) temp.get("fields");
-                    coursesInDatabase.add(new Course(temp.getInt("pk"), fields.getString("code"), fields.getString("name"))); // (fields.get("code").toString(),temp.getInt("pk"));
                 }
 
             } catch (JSONException e) {
@@ -322,6 +393,7 @@ public class UserActivity extends AppCompatActivity
                 e.printStackTrace();
             }
 
+            StringBuilder stringBuilder = null;
             JSONObject jsonObject = null;
             HttpURLConnection client = null;
             try {
@@ -333,15 +405,9 @@ public class UserActivity extends AppCompatActivity
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
-                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder = new StringBuilder();
                 String line = null;
-                // Read Server Response
-                while((line = reader.readLine()) != null)
-                {
-                    // Append server response in string
-                    stringBuilder.append(line + "\n");
-                }
-
+                while((line = reader.readLine()) != null){ stringBuilder.append(line + "\n"); }
                 System.out.println(client.getHeaderFields());
 
                 reader.close();
@@ -354,7 +420,7 @@ public class UserActivity extends AppCompatActivity
             } finally {
                 client.disconnect();
 
-                return true;
+                return stringBuilder.toString().contains("logout") && stringBuilder.toString().contains("successful");
             }
 
         }
@@ -364,6 +430,7 @@ public class UserActivity extends AppCompatActivity
 
             if (success) {
                 session.logoutUser();
+                caldroidFragment.refreshView();
                 Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                 startActivity(intent);
             } else {

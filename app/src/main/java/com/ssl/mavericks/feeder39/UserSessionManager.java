@@ -50,6 +50,9 @@ public class UserSessionManager {
     // database stored in file
     public static final String FILE_DATABASE = "com.ssl.mavericks.feeder39.FILE_DATABASE";
 
+    // session cookie stored as string
+    public static final String TOKEN = "com.ssl.mavericks.feeder39.TOKEN";
+
     // Constructor
     public UserSessionManager(Context context){
         this._context = context;
@@ -58,7 +61,7 @@ public class UserSessionManager {
     }
 
     //Create login session
-    public boolean createUserLoginSession(String username, String password, String cookie, Context context){
+    public boolean createUserLoginSession(String username, String password, String cookie, Context context, String token){
 
         // Storing login value as TRUE
         editor.putBoolean(IS_USER_LOGIN, true);
@@ -68,6 +71,8 @@ public class UserSessionManager {
 
         // Storing cookie in pref
         editor.putString(SESSION_COOKIE, cookie);
+
+        editor.putString(TOKEN,token);
 
         // commit changes
         editor.commit();
@@ -98,6 +103,7 @@ public class UserSessionManager {
 
             return true;
         }
+
         return false;
     }
 

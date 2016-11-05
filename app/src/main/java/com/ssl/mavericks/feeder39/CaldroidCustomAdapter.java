@@ -13,6 +13,12 @@ import android.widget.TextView;
 import com.roomorama.caldroid.CaldroidFragment;
 import com.roomorama.caldroid.CaldroidGridAdapter;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import hirondelle.date4j.DateTime;
@@ -103,17 +109,53 @@ public class CaldroidCustomAdapter extends CaldroidGridAdapter {
         dateDay.setTextSize(13f);  // dont touch
         eventsDay.setText("");
 
-        if(dateTime.equals(getToday())){
-            dateDay.setVisibility(View.GONE);
-            cellView.setBackgroundResource(com.caldroid.R.drawable.disabled_cell_dark);
+        HashMap<Date, ArrayList<Assignment>> listAss = UserActivity.assignmentsDateLists;
 
-            eventsDay.setText("Helszcc\nTscscahis\nacascxac\nsca");
+        DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
-            eventsDay.setHorizontallyScrolling(true);
-            eventsDay.setTextColor(Color.WHITE);
-        }else {
+//        String dateStr = formatter.format(dateTime);
+//        System.out.println(dateStr);
+        Date p = null;
+        //            p = formatter.parse(dateStr);
+
+        if(listAss != null){
+            if(listAss.get(dateTime) != null){
+                dateDay.setVisibility(View.GONE);
+                cellView.setBackgroundResource(com.caldroid.R.drawable.disabled_cell_dark);
+
+                System.out.println(dateTime);
+                String innerString = new String();
+
+                for (Assignment ass : listAss.get(dateTime)){
+                    innerString = innerString.concat(ass.getTitle() + "\n");
+                }
+
+                eventsDay.setText(innerString);
+
+                eventsDay.setHorizontallyScrolling(true);
+                eventsDay.setTextColor(Color.WHITE);
+            }else {
+                dateDay.setText("" + dateTime.getDay());
+            }
+
+        }else{
             dateDay.setText("" + dateTime.getDay());
         }
+
+
+//        if(dateTime.equals(getToday())){
+//            dateDay.setVisibility(View.GONE);
+//            cellView.setBackgroundResource(com.caldroid.R.drawable.disabled_cell_dark);
+//
+//            System.out.println(dateTime);
+//
+//            eventsDay.setText("Helszcc\nTscscahis\nacascxac\nsca");
+//
+//            eventsDay.setHorizontallyScrolling(true);
+//            eventsDay.setTextColor(Color.WHITE);
+//        }else {
+//            dateDay.setText("" + dateTime.getDay());
+//        }
 
         // Somehow after setBackgroundResource, the padding collapse.
         // This is to recover the padding
